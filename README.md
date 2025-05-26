@@ -1,6 +1,6 @@
 # File2Link API Documentation
 
-Base URL: `https://file2link-ol4p.onrender.com`
+Base URL: `https://file2link-tm3r.onrender.com`
 
 ## Endpoints
 
@@ -68,7 +68,7 @@ Currently, no authentication is required to use the API.
 ### cURL
 ```bash
 curl -X POST \
-  https://file2link-ol4p.onrender.com/upload \
+  https://file2link-tm3r.onrender.com/upload \
   -H 'Content-Type: multipart/form-data' \
   -F 'file=@/path/to/file.jpg'
 ```
@@ -77,7 +77,7 @@ curl -X POST \
 ```python
 import requests
 
-url = "https://file2link-ol4p.onrender.com/upload"
+url = "https://file2link-tm3r.onrender.com/upload"
 files = {'file': open('file.jpg', 'rb')}
 response = requests.post(url, files=files)
 print(response.json())
@@ -88,7 +88,7 @@ print(response.json())
 const formData = new FormData();
 formData.append('file', fileInput.files[0]);
 
-fetch('https://file2link-ol4p.onrender.com/upload', {
+fetch('https://file2link-tm3r.onrender.com/upload', {
     method: 'POST',
     body: formData
 })
