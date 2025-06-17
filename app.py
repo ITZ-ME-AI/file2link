@@ -35,7 +35,7 @@ def ping_file2link():
     """Ping the file2link service every 10 seconds"""
     while True:
         try:
-            response = requests.get('https://file2link-ol4p.onrender.com')
+            response = requests.get('https://file2link-3pse.onrender.com')
             if response.status_code == 200:
                 print(f"[{datetime.now()}] Successfully pinged file2link service")
             else:
