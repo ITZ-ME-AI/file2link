@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image2Link Uploader</title>
+  <style>
+    body { font-family: sans-serif; background: #f6f8fa; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 2rem; }
+    .container { background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); max-width: 400px; width: 100%; }
+    h1 { margin-top: 0; }
+    input[type="file"] { margin-bottom: 1rem; }
+    .result { margin-top: 1.5rem; word-break: break-all; }
+    .progress { margin-top: 1rem; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
+    .progress-bar { height: 100%; background: #007bff; width: 0; transition: width 0.3s; }
+    .link { color: #007bff; }
+    .error { color: #d32f2f; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Image2Link</h1>
+    <form id="uploadForm">
+      <input type="file" name="image" id="imageInput" accept="image/*" required />
+      <button type="submit">Upload</button>
+    </form>
+    <div class="progress" id="progress" style="display:none;">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="result" id="result"></div>
+  </div>
+  <script>
+    const form = document.getElementById('uploadForm');
+    const result = document.getElementById('result');
+    const progress = document.getElementById('progress');
+    const progressBar = document.getElementById('progressBar');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      result.textContent = '';
+      const fileInput = document.getElementById('imageInput');
+      if (!fileInput.files.length) return;
+      const file = fileInput.files[0];
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/upload', true);
+
+      xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+          progress.style.display = 'block';
+          const percent = (e.loaded / e.total) * 100;
+          progressBar.style.width = percent + '%';
+        }
+      };
+      xhr.onload = function() {
+        progress.style.display = 'none';
+        progressBar.style.width = '0';
+        if (xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText);
+          result.innerHTML = `<div>CDN Link: <a class="link" href="${data.url}" target="_blank">${data.url}</a></div><img src="${data.url}" alt="Uploaded image" style="max-width:100%;margin-top:1rem;" />`;
+        } else {
+          let error = 'Upload failed.';
+          try { error = JSON.parse(xhr.responseText).error; } catch {}
+          result.innerHTML = `<div class="error">${error}</div>`;
+        }
+      };
+      xhr.onerror = function() {
+        progress.style.display = 'none';
+        progressBar.style.width = '0';
+        result.innerHTML = '<div class="error">Network error.</div>';
+      };
+      xhr.send(formData);
+    });
+  </script>
+</body>
+</html> 
