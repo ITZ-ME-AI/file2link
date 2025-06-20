@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const ImageKit = require('imagekit');
 const crypto = require('crypto');
+const cors = require('cors');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -11,6 +12,8 @@ const imagekit = new ImageKit({
   privateKey: 'private_2K+1aGgq4ATkxUq5B6w8NRq8lL0=',
   urlEndpoint: 'https://ik.imagekit.io/veltrixvision'
 });
+
+app.use(cors());
 
 app.post('/upload', upload.single('image'), async (req, res) => {
   if (!req.file) {
