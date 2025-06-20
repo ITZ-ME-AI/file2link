@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const ImageKit = require('imagekit');
+const crypto = require('crypto');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -16,10 +17,14 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
+  // Generate a random filename, preserving the original extension
+  const ext = req.file.originalname.split('.').pop();
+  const randomName = crypto.randomBytes(16).toString('hex') + (ext ? `.${ext}` : '');
+
   try {
     const result = await imagekit.upload({
       file: req.file.buffer,
-      fileName: req.file.originalname
+      fileName: randomName
     });
     res.json({ url: result.url });
   } catch (err) {
