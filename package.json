@@ -4,7 +4,7 @@
   "description": "A simple Express.js service to upload images to ImageKit and get a CDN link.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node app.js"
   },
   "dependencies": {
     "express": "^4.18.2",
