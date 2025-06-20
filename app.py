@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, Response
 from flask_cors import CORS
-import internetarchive as ia
+from imagekitio import ImageKit
 import os
 from datetime import datetime
 import uuid
@@ -48,6 +48,13 @@ def ping_file2link():
 ping_thread = threading.Thread(target=ping_file2link, daemon=True)
 ping_thread.start()
 
+# Initialize ImageKit
+imagekit = ImageKit(
+    private_key='private_2K+1aGgq4ATkxUq5B6w8NRq8lL0=',
+    public_key='public_J2LWdBYDTxY8z0l3fKPMMq7lfak=',
+    url_endpoint='https://ik.imagekit.io/veltrixvision'
+)
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -56,75 +63,45 @@ def index():
 def upload_file():
     if request.method == 'OPTIONS':
         return '', 200
-        
+
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
-    
+
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
-    if file:
-        # Use shop_proj as the identifier
-        item_id = 'shop_proj'
-        
-        try:
-            # Generate a unique filename
-            original_filename = file.filename
-            file_extension = os.path.splitext(original_filename)[1]
-            unique_filename = f"{uuid.uuid4()}{file_extension}"
-            
-            # Prepare metadata
-            metadata = {
-                'title': f'File2Link Upload - {original_filename}',
-                'mediatype': 'data',
-                'collection': 'opensource',
-                'description': f'Original filename: {original_filename}',
-                'creator': 'File2Link Uploader',
-                'date': datetime.now().strftime('%Y-%m-%d'),
-                'licenseurl': 'https://creativecommons.org/licenses/by/4.0/',
-                'subject': ['file2link', 'file sharing'],
-                'original_filename': original_filename
+    try:
+        # Generate a unique filename
+        original_filename = file.filename
+        file_extension = os.path.splitext(original_filename)[1]
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
+
+        # Upload to ImageKit
+        upload_response = imagekit.upload(
+            file=file,
+            file_name=unique_filename,
+            options={
+                "folder": "/veltrixvision",
+                "use_unique_file_name": True,
+                "tags": ["file2link", "veltrixvision"]
             }
+        )
 
-            def generate_progress():
-                total_size = 0
-                uploaded_size = 0
-                
-                # Get file size
-                file.seek(0, os.SEEK_END)
-                total_size = file.tell()
-                file.seek(0)
-                
-                # Upload the file with metadata
-                r = ia.upload(
-                    item_id,
-                    files={unique_filename: file},
-                    metadata=metadata,
-                    access_key='PrJnoIKjNt4ul1Fr',
-                    secret_key='S0tCXWb7fM43m44Y'
-                )
-                
-                if r[0].status_code == 200:
-                    # Get the access URL with the correct format
-                    access_url = f'https://archive.org/download/{item_id}/{unique_filename}'
-                    
-                    return json.dumps({
-                        'success': True,
-                        'access_url': access_url,
-                        'item_id': item_id,
-                        'original_filename': original_filename,
-                        'unique_filename': unique_filename,
-                        'metadata': metadata
-                    })
-                else:
-                    return json.dumps({'error': 'Upload failed'})
+        return jsonify({
+            'success': True,
+            'access_url': upload_response['url'],
+            'original_filename': original_filename,
+            'unique_filename': unique_filename,
+            'metadata': {
+                'uploaded_at': datetime.now().isoformat(),
+                'tags': upload_response.get('tags', [])
+            }
+        })
 
-            return Response(generate_progress(), mimetype='application/json')
-            
-        except Exception as e:
-            return jsonify({'error': str(e), 'progress': 0}), 500
+    except Exception as e:
+        return jsonify({'error': str(e), 'progress': 0}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True) 
+    app.run(host='0.0.0.0', port=port, debug=True)
