@@ -1,6 +1,0 @@
-flask
-werkzeug
-imagekitio
-requests
-flask-cors
-python-dotenv
